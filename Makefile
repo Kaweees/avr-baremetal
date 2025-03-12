@@ -1,18 +1,13 @@
-# Makefile for compiling, linking, and flashing AVR programs to an microcontroller of choice
-
+# Makefile for compiling, linking, and flashing AVR programs to an microcontroller of choice.
 # Begin Variables Section
 
 ## Microcontroller Section: change these variables based on your microcontroller
 # -----------------------------------------------------------------------------
-# The running speed of the AVR in Hz, mostly used for `delay_ms` time
-# calculations.
 # The running speed of the AVR in Hz, mostly used for `delay_ms` calculations and the `F_CPU` macro.
 CLOCK_FREQ := 16000000UL
-
-# target microcontroller architecture (Atmega32U4)
+# The target microcontroller architecture (Atmega32U4)
 # For a complete list, see https://gcc.gnu.org/onlinedocs/gcc/AVR-Options.html.
 ARCH := atmega32u4
-# serial port microcontroller is connected to
 # The system path to communicate via serial, used for both flashing and serial
 # monitoring. Defaults to the first port in /dev containing "tty.usb".
 SERIAL_PORT := /dev/$(shell ls /dev/ | grep -i "ttyACM*" | sed -n 1p)
@@ -23,22 +18,19 @@ BAUD_RATE := 9600
 ## AVRDUDE Section: change these variables based on your programmer
 # -----------------------------------------------------------------------------
 # Flashing baud rate.
-#
 # - 115200 (Arduino Uno)
 # - 57600  (Arduino Mini Pro)
 AVRDUDE_BAUD := 115200
-
 # Programmer used to communicate with the AVR.
 # For a complete list see `avrdude -c '?'`.
 AVRDUDE_PROGRAMMER := avr109
-
-# Partno of the device we're talking to. Typically related to the MMCU variable
+# Part number of the device we're talking to. Typically related to the MMCU variable
 # For a complete list see `avrdude -p '?'`.
 AVRDUDE_PARTNO := m328p
 
 ## Compiler Section: change these variables based on your compiler
 # -----------------------------------------------------------------------------
-# The `avr-gcc` executable.
+# The compiler executable.
 CC := avr-gcc
 # CFLAGS = -Wall -Werror -pedantic -Os -std=c99 \
          -DF_CPU=$(CLOCK_FREQ) -mmcu=$(ARCH) \
@@ -107,6 +99,6 @@ $(TARGET_HEX): $(TARGET_BIN)
 flash: $(TARGET_HEX)
 	$(AVRDUDE) -F -V -c $(AVRDUDE_PROGRAMMER) -p $(ARCH) -P $(SERIAL_PORT) -b $(BAUD_RATE) -U flash:w:$(TARGET_HEX):i
 
-# Remove all build artifacts
+# Clean target: remove build artifacts and non-essential files
 clean:
 	sudo rm -rf $(TOPDIR)/target
