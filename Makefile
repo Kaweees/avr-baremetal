@@ -1,6 +1,10 @@
 # Makefile for compiling, linking, and flashing AVR programs to an microcontroller of choice.
 # Begin Variables Section
 
+## Program Section: change these variables based on your program
+# The name of the program to build.
+TARGET := hello
+
 ## Microcontroller Section: change these variables based on your microcontroller
 # -----------------------------------------------------------------------------
 # The running speed of the AVR in Hz, mostly used for `delay_ms` calculations and the `F_CPU` macro.
@@ -32,9 +36,7 @@ AVRDUDE_PARTNO := m328p
 # -----------------------------------------------------------------------------
 # The compiler executable.
 CC := avr-gcc
-# CFLAGS = -Wall -Werror -pedantic -Os -std=c99 \
-         -DF_CPU=$(CLOCK_FREQ) -mmcu=$(ARCH) \
-	 -I. $(DEPENDENCIES:%=-I%/include)
+# The compiler flags.
 CFLAGS := -Os -DF_CPU=$(CLOCK_FREQ) -mmcu=$(ARCH)
 
 # The `obj-copy` executable.
@@ -81,7 +83,7 @@ compile: $(TARGET_OBJ)
 
 $(TARGET_OBJ): $(SOURCE)
 	mkdir -p $(BUILD_DIR)
-	$(CC) $(CFLAGS) -c -o $(TARGET_OBJ) $(SOURCE) 
+	$(CC) $(CFLAGS) -c -o $(TARGET_OBJ) $(SOURCE)
 
 # Use the AVR-GCC compiler to link the object file into an executable binary file
 link: $(TARGET_BIN)
