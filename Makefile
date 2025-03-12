@@ -31,6 +31,14 @@ AVRDUDE_PROGRAMMER := avr109
 # Part number of the device we're talking to. Typically related to the MMCU variable
 # For a complete list see `avrdude -p '?'`.
 AVRDUDE_PARTNO := m328p
+# The avrdude executable.
+AVRDUDE := sudo avrdude
+# The avrdude flags.
+AVRDUDE_FLAGS := -F -V -c $(AVRDUDE_PROGRAMMER) -p $(AVRDUDE_PARTNO)
+# The avr-size executable.
+AVRSIZE := avr-size
+# The avr-size flags.
+AVRSIZE_FLAGS := -C
 
 ## Compiler Section: change these variables based on your compiler
 # -----------------------------------------------------------------------------
@@ -38,33 +46,32 @@ AVRDUDE_PARTNO := m328p
 CC := avr-gcc
 # The compiler flags.
 CFLAGS := -Os -DF_CPU=$(CLOCK_FREQ) -mmcu=$(ARCH)
-
-# The `obj-copy` executable.
+# The objcopy executable.
 OBJ_COPY := avr-objcopy
+# The objcopy flags.
 OBJ_COPY_FLAGS := -O ihex -R .eeprom
-
-# The `avrdude` executable.
-AVRDUDE := sudo avrdude
-AVRDUDE_FLAGS := -F -V -c $(AVRDUDE_PROGRAMMER) -p $(AVRDUDE_PARTNO)
-
-# The `avr-size` executable.
-AVRSIZE := avr-size
-AVRSIZE_FLAGS := -C
+# The shell executable.
+SHELL := /bin/bash
 
 ## Output Section: change these variables based on your output
 # -----------------------------------------------------------------------------
 # top directory of project
 TOP_DIR := $(shell pwd)
-
-# source files to compile
-SOURCE := $(TOP_DIR)/src/main.c
+# directory to locate source files
+SRC_DIR := $(TOP_DIR)/src
+# directory to locate header files
+INC_DIR := $(TOP_DIR)/include
+# directory to locate object files
+OBJ_DIR := $(TOP_DIR)/obj
 # directory to place build artifacts
 BUILD_DIR := $(TOP_DIR)/target/$(ARCH)/release/
-# name of target executable
 
-TARGET := hello
-# object file to link
-TARGET_OBJ := $(BUILD_DIR)$(TARGET).o
+# header files to preprocess
+INCS := -I$(INC_DIR)
+# source files to compile
+SRCS := $(wildcard $(SRC_DIR)/*.c)
+# object files to link
+OBJS := $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRCS))
 # binary file to convert to hex
 TARGET_BIN := $(BUILD_DIR)$(TARGET).bin
 # hex file to flash
@@ -79,17 +86,18 @@ all: clean compile link hex flash
 
 # $< and $@ are automatic variables that refer to the source (dependency) and target (build) files, respectively
 # Use the AVR-GCC compiler to compile source files into an object file
-compile: $(TARGET_OBJ)
+compile: $(OBJS)
 
-$(TARGET_OBJ): $(SOURCE)
-	mkdir -p $(BUILD_DIR)
-	$(CC) $(CFLAGS) -c -o $(TARGET_OBJ) $(SOURCE)
+$(OBJS): $(SRCS)
+	@mkdir -p $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c -o $(OBJS) $(SRCS)
 
 # Use the AVR-GCC compiler to link the object file into an executable binary file
 link: $(TARGET_BIN)
 
-$(TARGET_BIN): $(TARGET_OBJ)
-	$(CC) -mmcu=$(ARCH) -o $(TARGET_BIN) $(TARGET_OBJ)
+$(TARGET_BIN): $(OBJS)
+	@mkdir -p $(BUILD_DIR)
+	$(CC) -mmcu=$(ARCH) -o $(TARGET_BIN) $(OBJS)
 
 # Use the AVR-OBJCOPY tool to convert the executable binary file into a hex file
 hex: $(TARGET_HEX)
@@ -103,4 +111,5 @@ flash: $(TARGET_HEX)
 
 # Clean target: remove build artifacts and non-essential files
 clean:
-	sudo rm -rf $(TOPDIR)/target
+	@echo "Cleaning $(TARGET)..."
+	rm -rf $(OBJ_DIR) $(BUILD_DIR)
